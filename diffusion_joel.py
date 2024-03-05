@@ -131,7 +131,7 @@ def sample_ddpm(n_sample, height, timesteps, noise, nn_model, device):
 
 def main():
     # diffusion hyperparameters
-    timesteps = 600
+    timesteps = 500
 
     # network hyperparameters
     device = torch.device("cuda:0" if torch.cuda.is_available() else torch.device('cpu'))
