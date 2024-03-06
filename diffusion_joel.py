@@ -155,9 +155,14 @@ def main():
 
     samples = sample_ddpm(n_sample=n_sample, height=height, timesteps=timesteps, noise=noise, nn_model=nn_model, device=device)
 
-    for i in range(n_sample):
-        pil_image = transforms.ToPILImage()(samples[i])
-        pil_image.save(f'out{i}.jpg')
+    tmp = samples.detach().cpu().numpy()
+
+for i in range(2):
+    pil_image = np.transpose(tmp[i], (1, 2, 0)) # -1.5 to 1.5
+    pil_image = unorm(pil_image) # 0..1
+    pil_image = (pil_image*255).astype(np.uint8) # 0..255
+    im = Image.fromarray(pil_image)
+    im.save(f'out{i}.png')
 
 if __name__ == "__main__":
     main()
