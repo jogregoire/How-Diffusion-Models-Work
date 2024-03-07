@@ -18,3 +18,5 @@
 - get the same sprite facing front and side!
 
 - in/out-painting
+
+- LoRA: https://kyrise.itch.io/kyrises-free-16x16-rpg-icon-pack
