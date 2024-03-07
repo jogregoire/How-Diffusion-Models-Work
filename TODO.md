@@ -14,3 +14,7 @@
 - noise scheduler: cosine (https://betterprogramming.pub/diffusion-models-ddpms-ddims-and-classifier-free-guidance-e07b297b2869#0caf)
 
 - DDIM
+
+- get the same sprite facing front and side!
+
+- in/out-painting
