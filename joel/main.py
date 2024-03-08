@@ -6,6 +6,7 @@ from model import *
 from noise_scheduler import *
 from sampler import *
 from ddpm_sampler import *
+from gpuperf import *
 
 def main():
     parser = argparse.ArgumentParser(description='PyTorch Example')
@@ -21,6 +22,10 @@ def main():
     device = torch.device("cuda:0" if gpu_enabled else torch.device('cpu'))
     log.info('using device: %s', device)
 
+    gpu_perf = GPUPerf(gpu_enabled, device)
+
+    gpu_perf.snapshot()
+
     # network hyperparameters
     n_feat = 64 # 64 hidden dimension feature
     n_cfeat = 5 # context vector is of size 5
@@ -31,6 +36,8 @@ def main():
     nn_model = Model(in_channels=3, n_feat=n_feat, n_cfeat=n_cfeat, height=height, device=device)
     nn_model.load_model(model_path)
 
+    gpu_perf.snapshot()
+
     # diffusion hyperparameters
     timesteps = 500
     n_sample = 4
@@ -39,6 +46,8 @@ def main():
     noise = NoiseScheduler(timesteps, device, NoiseScheduler.LINEAR)
     sampler = DDPMSampler(noise)
     samples = sampler.sample(n_sample=n_sample, height=height, timesteps=timesteps, nn_model=nn_model, device=device)
+
+    gpu_perf.snapshot()
 
     # save generated images
     image_path = './data/'
