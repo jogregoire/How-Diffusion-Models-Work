@@ -1,22 +1,25 @@
-from typing import Dict, Tuple
-from tqdm import tqdm
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torch.utils.data import DataLoader
-from torchvision import models, transforms
-from torchvision.utils import save_image, make_grid
-import numpy as np
+import argparse
+import logging as log
 from plot_images import *
 from model import *
 from noise_scheduler import *
 from sampler import *
-from ddpm import *
+from ddpm_sampler import *
 
 def main():
+    parser = argparse.ArgumentParser(description='PyTorch Example')
+    parser.add_argument('--disable-cuda', action='store_true',help='Disable CUDA')
+    parser.add_argument("-log", "--log", nargs='+', help="Provide logging level. Example --log debug'")
+    args = parser.parse_args()
+
+    # set log level
+    logging.basicConfig(level=args.log[0] if args.log else 'INFO')
+
     # run on GPU if available
-    gpu_enabled = torch.cuda.is_available()
+    gpu_enabled = not args.disable_cuda and torch.cuda.is_available()
     device = torch.device("cuda:0" if gpu_enabled else torch.device('cpu'))
+    log.info('using device: %s', device)
 
     # network hyperparameters
     n_feat = 64 # 64 hidden dimension feature

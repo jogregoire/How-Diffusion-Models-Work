@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import logging as log
 from unet import *
 
 class ResidualConvBlock(nn.Module):
@@ -45,7 +46,7 @@ class ResidualConvBlock(nn.Module):
                 # If not, apply a 1x1 convolutional layer to match dimensions before adding residual connection
                 shortcut = nn.Conv2d(x.shape[1], x2.shape[1], kernel_size=1, stride=1, padding=0).to(x.device)
                 out = shortcut(x) + x2
-            #print(f"resconv forward: x {x.shape}, x1 {x1.shape}, x2 {x2.shape}, out {out.shape}")
+            log.debug(f"resconv forward: x {x.shape}, x1 {x1.shape}, x2 {x2.shape}, out {out.shape}")
 
             # Normalize output tensor
             return out / 1.414
@@ -201,7 +202,7 @@ class ContextUnet(nn.Module):
         temb1 = self.timeembed1(t).view(-1, self.n_feat * 2, 1, 1)
         cemb2 = self.contextembed2(c).view(-1, self.n_feat, 1, 1)
         temb2 = self.timeembed2(t).view(-1, self.n_feat, 1, 1)
-        #print(f"uunet forward: cemb1 {cemb1.shape}. temb1 {temb1.shape}, cemb2 {cemb2.shape}. temb2 {temb2.shape}")
+        log.debug(f"uunet forward: cemb1 {cemb1.shape}. temb1 {temb1.shape}, cemb2 {cemb2.shape}. temb2 {temb2.shape}")
 
 
         up1 = self.up0(hiddenvec)

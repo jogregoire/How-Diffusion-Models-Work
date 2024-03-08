@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+import logging as log
 from torchvision.utils import save_image, make_grid
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
@@ -48,7 +49,7 @@ def plot_grid(x,path):
     ncols = n_sample//n_rows
     grid = make_grid(norm_torch(x), nrow=ncols)  # curiously, nrow is number of columns.. or number of items in the row.
     save_image(grid, path)
-    print(f'saved image at {path}')
+    log.info(f'saved image at {path}')
     return grid
 
 def plot_sample(x_gen_store,n_sample,nrows,save_dir, fn,  w, save=False):
@@ -59,7 +60,7 @@ def plot_sample(x_gen_store,n_sample,nrows,save_dir, fn,  w, save=False):
     # create gif of images evolving over time, based on x_gen_store
     fig, axs = plt.subplots(nrows=nrows, ncols=ncols, sharex=True, sharey=True,figsize=(ncols,nrows))
     def animate_diff(i, store):
-        print(f'gif animating frame {i} of {store.shape[0]}', end='\r')
+        log.info(f'gif animating frame {i} of {store.shape[0]}', end='\r')
         plots = []
         for row in range(nrows):
             for col in range(ncols):
@@ -72,6 +73,6 @@ def plot_sample(x_gen_store,n_sample,nrows,save_dir, fn,  w, save=False):
     plt.close()
     if save:
         ani.save(save_dir + f"{fn}_w{w}.gif", dpi=100, writer=PillowWriter(fps=5))
-        print('saved gif at ' + save_dir + f"{fn}_w{w}.gif")
+        log.info('saved gif at ' + save_dir + f"{fn}_w{w}.gif")
     return ani
 

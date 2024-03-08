@@ -1,4 +1,5 @@
 import torch
+import logging as log
 from sampler import Sampler
 from model import *
 
@@ -13,7 +14,7 @@ class DDPMSampler(Sampler):
 
         # array to keep track of generated steps for plotting
         for i in range(timesteps, 0, -1):
-            print(f'sampling timestep {i:3d}', end='\r')
+            print(f'sampling timestep {i:3d}\r', end='\r') # not a log
 
             # reshape time tensor
             t = torch.tensor([i / timesteps])[:, None, None, None].to(device)

@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+import logging as log
 from torch.utils.data import Dataset
 import torchvision.transforms as transforms
 
@@ -7,8 +8,8 @@ class CustomDataset(Dataset):
     def __init__(self, sfilename, lfilename, transform, null_context=False):
         self.sprites = np.load(sfilename)
         self.slabels = np.load(lfilename)
-        print(f"sprite shape: {self.sprites.shape}")
-        print(f"labels shape: {self.slabels.shape}")
+        log.info(f"sprite shape: {self.sprites.shape}")
+        log.info(f"labels shape: {self.slabels.shape}")
         self.transform = transform
         self.null_context = null_context
         self.sprites_shape = self.sprites.shape
