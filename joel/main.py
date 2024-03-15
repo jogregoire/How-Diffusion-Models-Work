@@ -7,11 +7,14 @@ from noise_scheduler import *
 from sampler import *
 from ddpm_sampler import *
 from gpuperf import *
+from training import *
 
 def main():
     parser = argparse.ArgumentParser(description='PyTorch Example')
     parser.add_argument('--disable-cuda', action='store_true',help='Disable CUDA')
-    parser.add_argument("-log", "--log", nargs='+', help="Provide logging level. Example --log debug'")
+    parser.add_argument("--log", nargs='+', help="Provide logging level. Example --log debug'")
+    parser.add_argument("--save-images", help="Save all images")
+    parser.add_argument("--train", help="Train the model")
     args = parser.parse_args()
 
     # set log level
@@ -24,7 +27,9 @@ def main():
 
     gpu_perf = GPUPerf(gpu_enabled, device)
 
-    gpu_perf.snapshot()
+    gpu_perf.snapshot('start')
+
+    torch.cuda.utilization(device=device)
 
     # network hyperparameters
     n_feat = 64 # 64 hidden dimension feature
@@ -36,25 +41,42 @@ def main():
     nn_model = Model(in_channels=3, n_feat=n_feat, n_cfeat=n_cfeat, height=height, device=device)
     nn_model.load_model(model_path)
 
-    gpu_perf.snapshot()
-
     # diffusion hyperparameters
     timesteps = 500
-    n_sample = 4
 
-    # sample images
+    # create noise scheduler
     noise = NoiseScheduler(timesteps, device, NoiseScheduler.LINEAR)
     sampler = DDPMSampler(noise)
-    samples = sampler.sample(n_sample=n_sample, height=height, timesteps=timesteps, nn_model=nn_model, device=device)
 
-    gpu_perf.snapshot()
+    gpu_perf.snapshot('before')
 
-    # save generated images
-    image_path = './data/'
-    grid_filename = './data/grid.png'
+    args.train = True
+    if args.train: # training ---------------------------
+        # training hyperparameters
+        batch_size = 100
+        n_epoch = 32
+        lrate=1e-3
 
-    plot_grid(samples, grid_filename)
-    plot_images(samples, image_path)
+        training = Training(noise, nn_model, lrate, batch_size, device=device, gpu_perf=gpu_perf)
+        training.train(timesteps, n_epoch)
+    
+    else: # sampling ------------------------------------
+        # sampling hyperparameters
+        n_sample = 64
+
+        # sample images
+        samples = sampler.sample(n_sample=n_sample, height=height, timesteps=timesteps, nn_model=nn_model, device=device)
+
+        gpu_perf.snapshot('after')
+
+        # save generated images
+        image_path = './data/'
+        grid_filename = './data/grid.png'
+
+        plot_grid(samples, grid_filename)
+
+        if args.save_images:
+            plot_images(samples, image_path)
 
 if __name__ == "__main__":
     main()
