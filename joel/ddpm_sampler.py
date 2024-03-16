@@ -1,7 +1,6 @@
 import torch
 import logging as log
 from sampler import Sampler
-from model import *
 
 class DDPMSampler(Sampler):
     def __init__(self, noise_sampler):
@@ -22,7 +21,8 @@ class DDPMSampler(Sampler):
             # sample some random noise to inject back in. For i = 1, don't add back in noise
             z = torch.randn_like(samples) if i > 1 else 0
 
-            eps = nn_model.predict(samples, t)
+            # predict noise e_(x_t,t)
+            eps = nn_model(samples, t)
             samples = self.noise_sampler.denoise_add_noise(samples, i, eps, z)
 
         return samples

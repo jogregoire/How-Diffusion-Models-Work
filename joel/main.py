@@ -2,7 +2,7 @@ import torch
 import argparse
 import logging as log
 from plot_images import *
-from model import *
+from unet import *
 from noise_scheduler import *
 from sampler import *
 from ddpm_sampler import *
@@ -18,7 +18,7 @@ def main():
     args = parser.parse_args()
 
     # set log level
-    logging.basicConfig(level=args.log[0] if args.log else 'INFO')
+    log.basicConfig(level=args.log[0] if args.log else 'INFO')
 
     # run on GPU if available
     gpu_enabled = not args.disable_cuda and torch.cuda.is_available()
@@ -35,12 +35,13 @@ def main():
     n_feat = 64 # 64 hidden dimension feature
     n_cfeat = 5 # context vector is of size 5
     height = 16 # 16x16 image
+    in_channels=3 # rgb
 
     # load model
     model_path = './weights/'
-    nn_model = Model(in_channels=3, n_feat=n_feat, n_cfeat=n_cfeat, height=height, device=device)
-    nn_model.load_model(model_path)
-
+    log.info(f'building model with in_channels={in_channels}, n_feat={n_feat}, n_cfeat={n_cfeat}, height={height}')
+    nn_model = nn_model = ContextUnet(in_channels, n_feat=n_feat, n_cfeat=n_cfeat, height=height).to(device)
+    
     # diffusion hyperparameters
     timesteps = 500
 
@@ -61,6 +62,12 @@ def main():
         training.train(timesteps, n_epoch)
     
     else: # sampling ------------------------------------
+
+        # load model weights
+        log.info(f'loading model from {model_path}')
+        nn_model.load_state_dict(torch.load(f"{model_path}/model_trained.pth", map_location=device))
+        nn_model.eval()
+
         # sampling hyperparameters
         n_sample = 64
 

@@ -3,7 +3,6 @@ import logging as log
 import numpy as np
 from torchvision import transforms
 from torch.utils.data import Dataset, DataLoader
-from model import *
 from gpuperf import *
 from tqdm import tqdm
 
