@@ -1,6 +1,7 @@
 import torch
 import logging as log
 import numpy as np
+import torch.nn.functional as F
 from torchvision import transforms
 from torch.utils.data import Dataset, DataLoader
 from gpuperf import *
@@ -85,6 +86,4 @@ class Training():
                 
                 self.optim.step()
 
-            # save model periodically
-            if ep%4==0 or ep == int(n_epoch-1):
-                self.gpu_perf.snapshot('before')
+                self.gpu_perf.snapshot(f'epoch {ep}')
