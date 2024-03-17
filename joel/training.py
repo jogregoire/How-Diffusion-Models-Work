@@ -56,7 +56,7 @@ class Training():
         self.dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=1)
         self.optim = torch.optim.Adam(nn_model.parameters(), lr=lr)
 
-    def train(self, timesteps, n_epoch):
+    def train(self, timesteps, n_epoch, filename):
         # training without context code
         # set into train mode
         self.nn_model.train()
@@ -86,4 +86,10 @@ class Training():
                 
                 self.optim.step()
 
-                self.gpu_perf.snapshot(f'epoch {ep}')
+            self.gpu_perf.snapshot(f'epoch {ep}')
+
+
+        # save model periodically
+        torch.save(self.nn_model.state_dict(), filename)
+        log.info(f"saved model to {filename}")
+

@@ -38,7 +38,7 @@ def main():
     in_channels=3 # rgb
 
     # load model
-    model_path = './weights/'
+    model_filename = './weights/model_trained.pth'
     log.info(f'building model with in_channels={in_channels}, n_feat={n_feat}, n_cfeat={n_cfeat}, height={height}')
     nn_model = nn_model = ContextUnet(in_channels, n_feat=n_feat, n_cfeat=n_cfeat, height=height).to(device)
     
@@ -51,7 +51,7 @@ def main():
 
     gpu_perf.snapshot('before')
 
-    args.train = True
+    #args.train = True
     if args.train: # training ---------------------------
         # training hyperparameters
         batch_size = 100
@@ -59,13 +59,13 @@ def main():
         lrate=1e-3
 
         training = Training(noise, nn_model, lrate, batch_size, device=device, gpu_perf=gpu_perf)
-        training.train(timesteps, n_epoch)
+        training.train(timesteps, n_epoch, model_filename)
     
     else: # sampling ------------------------------------
 
         # load model weights
-        log.info(f'loading model from {model_path}')
-        nn_model.load_state_dict(torch.load(f"{model_path}/model_trained.pth", map_location=device))
+        log.info(f'loading model {model_filename}')
+        nn_model.load_state_dict(torch.load(model_filename, map_location=device))
         nn_model.eval()
 
         # sampling hyperparameters
