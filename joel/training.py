@@ -56,7 +56,7 @@ class Training():
         self.dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=1)
         self.optim = torch.optim.Adam(nn_model.parameters(), lr=lr)
 
-    def train(self, timesteps, n_epoch, filename):
+    def train(self, timesteps, n_epoch, filename, use_context=False):
         # training without context code
         # set into train mode
         self.nn_model.train()
@@ -68,17 +68,31 @@ class Training():
             self.optim.param_groups[0]['lr'] = self.lr*(1-ep/n_epoch)
             
             pbar = tqdm(self.dataloader, mininterval=2 )
-            for x, _ in pbar:   # x: images
+            for x, c in pbar:   # x: images
                 self.optim.zero_grad()
                 x = x.to(self.device)
+
+                if use_context:
+                    #----------------- context code -----------------
+                    c = c.to(x)
+                    #----------------- context code -----------------
+                    c = c.to(x) # move c to same device as x
+            
+                    # randomly mask out c
+                    context_mask = torch.bernoulli(torch.zeros(c.shape[0]) + 0.9).to(self.device)
+                    c = c * context_mask.unsqueeze(-1)
                 
                 # perturb data
                 noise = torch.randn_like(x)
                 t = torch.randint(1, timesteps + 1, (x.shape[0],)).to(self.device) 
                 x_pert = self.noise_sampler.perturb_input(x, t, noise)
                 
+
                 # use network to recover noise
-                pred_noise = self.nn_model(x_pert, t / timesteps)
+                if use_context:
+                    pred_noise = self.nn_model(x_pert, t / timesteps, c=c)
+                else:
+                    pred_noise = self.nn_model(x_pert, t / timesteps)
                 
                 # loss is mean squared error between the predicted and true noise
                 loss = F.mse_loss(pred_noise, noise)

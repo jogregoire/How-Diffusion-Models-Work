@@ -59,7 +59,7 @@ def main():
         lrate=1e-3
 
         training = Training(noise, nn_model, lrate, batch_size, device=device, gpu_perf=gpu_perf)
-        training.train(timesteps, n_epoch, model_filename)
+        training.train(timesteps, n_epoch, model_filename, use_context=True)
 
         gpu_perf.save_snapshots(f'./data/gpu_snapshots_training_batch{batch_size}.csv')
     
@@ -71,10 +71,15 @@ def main():
         nn_model.eval()
 
         # sampling hyperparameters
-        n_sample = 64
+        n_sample = 81
+
+        # context
+        # hero, non-hero, food, spell, side-facing
+        #ctx = F.one_hot(torch.randint(0, 5, (32,)), 5).to(device=device).float()
+        ctx = torch.tensor([1.0, 0.0, 0.0, 0.0, 0.0]).to(device=device).float()
 
         # sample images
-        samples = sampler.sample(n_sample=n_sample, height=height, timesteps=timesteps, nn_model=nn_model, device=device, gpu_perf=gpu_perf)
+        samples = sampler.sample(n_sample=n_sample, height=height, timesteps=timesteps, nn_model=nn_model, device=device, gpu_perf=gpu_perf, context=ctx)
 
         gpu_perf.snapshot('after')
 
