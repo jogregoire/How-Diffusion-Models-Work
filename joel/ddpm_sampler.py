@@ -7,7 +7,7 @@ class DDPMSampler(Sampler):
         self.noise_sampler = noise_sampler
 
     @torch.no_grad()
-    def sample(self, n_sample, height, timesteps, nn_model, device):
+    def sample(self, n_sample, height, timesteps, nn_model, device, gpu_perf):
         # x_T ~ N(0, 1), sample initial noise
         samples = torch.randn(n_sample, 3, height, height).to(device)  
 
@@ -24,5 +24,7 @@ class DDPMSampler(Sampler):
             # predict noise e_(x_t,t)
             eps = nn_model(samples, t)
             samples = self.noise_sampler.denoise_add_noise(samples, i, eps, z)
+
+            gpu_perf.snapshot(f"timestep {i:3d}")
 
         return samples

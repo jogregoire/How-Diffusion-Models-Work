@@ -1,5 +1,7 @@
 import torch
 import pynvml
+import datetime
+import pandas as pd
 import logging as log
 
 class GPUPerf:
@@ -9,14 +11,20 @@ class GPUPerf:
         device_name = torch.cuda.get_device_name(0)
         device_count = torch.cuda.device_count()
         self.mem_total = torch.cuda.get_device_properties(0).total_memory
-        log.info(f"Device: {device_name}, Count: {device_count}, Memory: {self.__bytefmt(self.mem_total)} GB")
         
         pynvml.nvmlInit()
         deviceCount = pynvml.nvmlDeviceGetCount()
         for i in range(deviceCount):
             handle = pynvml.nvmlDeviceGetHandleByIndex(i)
             log.info(f"Device {i}: {pynvml.nvmlDeviceGetName(handle)}")
-        log.info(f"Driver: {pynvml.nvmlSystemGetDriverVersion()}")
+
+        # Get handle to the first GPU device
+        self.handle = pynvml.nvmlDeviceGetHandleByIndex(0)
+        max_power = pynvml.nvmlDeviceGetPowerManagementLimit(self.handle)
+
+        log.info(f"Device: {device_name}, Count: {device_count}, Memory: {self.__bytefmt(self.mem_total)} GB, Driver: {pynvml.nvmlSystemGetDriverVersion()}, Max Power: {max_power / 1000.0} W")
+
+        self.df = pd.DataFrame(columns=['Time', 'Event', 'AllocatedMem', 'FreedMem', 'CurrentMem', 'PeakMem', 'Usage', 'Temperature', 'Power'])
 
     def snapshot(self, event="None"):
         if self.gpu_enabled:
@@ -25,19 +33,33 @@ class GPUPerf:
             freed = mem['active_bytes.all.freed']
             current = mem['active_bytes.all.current'] # = allocated - freed
             peak = mem['active_bytes.all.peak']
-            available_at_peak = self.mem_total - peak
 
             # Now, use this function in your log message
-            log.info(f"Event: {event} Memory Current: {self.__bytefmt(current)}, Peak: {self.__bytefmt(peak)}, Available at Peak: {self.__bytefmt(available_at_peak)}, Allocated total: {self.__bytefmt(allocated)}, Freed: {self.__bytefmt(freed)}")
+            log.debug(f"Event: {event} Memory Current: {self.__bytefmt(current)}, Peak: {self.__bytefmt(peak)}, Allocated total: {self.__bytefmt(allocated)}, Freed: {self.__bytefmt(freed)}")
 
             usage = torch.cuda.utilization(device=self.device)
+            power = pynvml.nvmlDeviceGetPowerUsage(self.handle)
+            temperature = pynvml.nvmlDeviceGetTemperature(self.handle, pynvml.NVML_TEMPERATURE_GPU)
 
-            # Get handle to the first GPU device
-            handle = pynvml.nvmlDeviceGetHandleByIndex(0)
-            power = pynvml.nvmlDeviceGetPowerUsage(handle)
-            max_power = pynvml.nvmlDeviceGetPowerManagementLimit(handle)
-            temperature = pynvml.nvmlDeviceGetTemperature(handle, pynvml.NVML_TEMPERATURE_GPU)
-            log.info(f"Event: {event} Utilization: {usage}, Temp: {temperature} C, Power {power / 1000.0} W / {max_power / 1000.0} W'")
+            log.debug(f"Event: {event} Utilization: {usage}, Temp: {temperature} C, Power {power / 1000.0} W")
+
+            # Append a new row to the DataFrame
+            new_row = {
+                'Time': datetime.datetime.now(),
+                'Event': event,
+                'AllocatedMem': allocated,
+                'FreedMem': freed,
+                'CurrentMem': current,
+                'PeakMem': peak,
+                'Usage': usage,
+                'Temperature': temperature,
+                'Power': power / 1000.0
+            }
+
+            self.df.loc[len(self.df)] = new_row
+
+    def save_snapshots(self, filename):
+        self.df.to_csv(filename)
 
     def record_memory_history(self):
         # record memory usage: https://pytorch.org/docs/stable/torch_cuda_memory.html

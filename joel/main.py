@@ -60,6 +60,8 @@ def main():
 
         training = Training(noise, nn_model, lrate, batch_size, device=device, gpu_perf=gpu_perf)
         training.train(timesteps, n_epoch, model_filename)
+
+        gpu_perf.save_snapshots(f'./data/gpu_snapshots_training_batch{batch_size}.csv')
     
     else: # sampling ------------------------------------
 
@@ -72,7 +74,7 @@ def main():
         n_sample = 64
 
         # sample images
-        samples = sampler.sample(n_sample=n_sample, height=height, timesteps=timesteps, nn_model=nn_model, device=device)
+        samples = sampler.sample(n_sample=n_sample, height=height, timesteps=timesteps, nn_model=nn_model, device=device, gpu_perf=gpu_perf)
 
         gpu_perf.snapshot('after')
 
@@ -84,6 +86,8 @@ def main():
 
         if args.save_images:
             plot_images(samples, image_path)
+
+        gpu_perf.save_snapshots('./data/gpu_snapshots_sampling.csv')
 
 if __name__ == "__main__":
     main()
