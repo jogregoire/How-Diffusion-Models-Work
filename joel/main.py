@@ -6,6 +6,7 @@ from unet import *
 from noise_scheduler import *
 from sampler import *
 from ddpm_sampler import *
+from ddim_sampler import *
 from gpuperf import *
 from training import *
 

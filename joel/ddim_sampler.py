@@ -2,33 +2,35 @@ import torch
 import logging as log
 from sampler import Sampler
 
-class DDPMSampler(Sampler):
+class DDIMSampler(Sampler):
     def __init__(self, noise_sampler):
         self.noise_sampler = noise_sampler
 
-    # helper function for sampling; removes the predicted noise (but adds some noise back in to avoid collapse)
-    def denoise_add_noise(self, x, t, pred_noise, z=None):
-        s = self.noise_sampler
-        if z is None:
-            z = torch.randn_like(x)
-        noise = s.b_t.sqrt()[t] * z
-        mean = (x - pred_noise * ((1 - s.a_t[t]) / (1 - s.ab_t[t]).sqrt())) / s.a_t[t].sqrt()
-        return mean + noise
+    def denoise_ddim(self, x, t, t_prev, pred_noise):
+        ab = self.noise_sampler.ab_t[t]
+        ab_prev = self.noise_sampler.ab_t[t_prev]
+        
+        x0_pred = ab_prev.sqrt() / ab.sqrt() * (x - (1 - ab).sqrt() * pred_noise)
+        dir_xt = (1 - ab_prev).sqrt() * pred_noise
 
+        return x0_pred + dir_xt
+    
     @torch.no_grad()
     def sample(self, n_sample, height, timesteps, nn_model, device, gpu_perf, context=None):
+        
+        n=20
+
         # x_T ~ N(0, 1), sample initial noise
         samples = torch.randn(n_sample, 3, height, height).to(device)  
 
+        step_size = timesteps // n
+
         # array to keep track of generated steps for plotting
-        for i in range(timesteps, 0, -1):
+        for i in range(timesteps, 0, -step_size):
             print(f'sampling timestep {i:3d}\r', end='\r') # not a log
 
             # reshape time tensor
             t = torch.tensor([i / timesteps])[:, None, None, None].to(device)
-
-            # sample some random noise to inject back in. For i = 1, don't add back in noise
-            z = torch.randn_like(samples) if i > 1 else 0
 
             # predict noise e_(x_t,t)
             if context is not None:
@@ -36,7 +38,7 @@ class DDPMSampler(Sampler):
             else:
                 eps = nn_model(samples, t)
 
-            samples = self.denoise_add_noise(samples, i, eps, z)
+            samples = self.denoise_ddim(samples, i, i - step_size, eps)
 
             gpu_perf.snapshot(f"timestep {i:3d}")
 
