@@ -29,8 +29,6 @@ def main():
 
     gpu_perf.snapshot('start')
 
-    torch.cuda.utilization(device=device)
-
     # network hyperparameters
     n_feat = 64 # 64 hidden dimension feature
     n_cfeat = 5 # context vector is of size 5
@@ -71,7 +69,7 @@ def main():
         nn_model.eval()
 
         # sampling hyperparameters
-        n_sample = 81
+        n_sample = 4
 
         # context
         # hero, non-hero, food, spell, side-facing

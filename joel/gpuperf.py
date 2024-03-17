@@ -8,23 +8,25 @@ class GPUPerf:
     def __init__(self, gpu_enabled, device):
         self.gpu_enabled = gpu_enabled
         self.device = device
-        device_name = torch.cuda.get_device_name(0)
-        device_count = torch.cuda.device_count()
-        self.mem_total = torch.cuda.get_device_properties(0).total_memory
-        
-        pynvml.nvmlInit()
-        deviceCount = pynvml.nvmlDeviceGetCount()
-        for i in range(deviceCount):
-            handle = pynvml.nvmlDeviceGetHandleByIndex(i)
-            log.info(f"Device {i}: {pynvml.nvmlDeviceGetName(handle)}")
 
-        # Get handle to the first GPU device
-        self.handle = pynvml.nvmlDeviceGetHandleByIndex(0)
-        max_power = pynvml.nvmlDeviceGetPowerManagementLimit(self.handle)
+        if self.gpu_enabled:
+            device_name = torch.cuda.get_device_name(0)
+            device_count = torch.cuda.device_count()
+            self.mem_total = torch.cuda.get_device_properties(0).total_memory
+            
+            pynvml.nvmlInit()
+            deviceCount = pynvml.nvmlDeviceGetCount()
+            for i in range(deviceCount):
+                handle = pynvml.nvmlDeviceGetHandleByIndex(i)
+                log.info(f"Device {i}: {pynvml.nvmlDeviceGetName(handle)}")
 
-        log.info(f"Device: {device_name}, Count: {device_count}, Memory: {self.__bytefmt(self.mem_total)} GB, Driver: {pynvml.nvmlSystemGetDriverVersion()}, Max Power: {max_power / 1000.0} W")
+            # Get handle to the first GPU device
+            self.handle = pynvml.nvmlDeviceGetHandleByIndex(0)
+            max_power = pynvml.nvmlDeviceGetPowerManagementLimit(self.handle)
 
-        self.df = pd.DataFrame(columns=['Time', 'Event', 'AllocatedMem', 'FreedMem', 'CurrentMem', 'PeakMem', 'Usage', 'Temperature', 'Power'])
+            log.info(f"Device: {device_name}, Count: {device_count}, Memory: {self.__bytefmt(self.mem_total)} GB, Driver: {pynvml.nvmlSystemGetDriverVersion()}, Max Power: {max_power / 1000.0} W")
+
+            self.df = pd.DataFrame(columns=['Time', 'Event', 'AllocatedMem', 'FreedMem', 'CurrentMem', 'PeakMem', 'Usage', 'Temperature', 'Power'])
 
     def snapshot(self, event="None"):
         if self.gpu_enabled:
@@ -59,7 +61,8 @@ class GPUPerf:
             self.df.loc[len(self.df)] = new_row
 
     def save_snapshots(self, filename):
-        self.df.to_csv(filename)
+        if self.gpu_enabled:
+            self.df.to_csv(filename)
 
     def record_memory_history(self):
         # record memory usage: https://pytorch.org/docs/stable/torch_cuda_memory.html
