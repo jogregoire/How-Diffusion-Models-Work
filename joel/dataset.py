@@ -2,15 +2,23 @@ import torch
 import numpy as np
 import logging as log
 from torch.utils.data import Dataset
-import torchvision.transforms as transforms
+import torchvision.transforms as T
+from torch import nn
 
 class CustomDataset(Dataset):
-    def __init__(self, sfilename, lfilename, transform, null_context=False):
+    def __init__(self, sfilename, lfilename, null_context=False, augment_horizontal_flip=True):
         self.sprites = np.load(sfilename)
         self.slabels = np.load(lfilename)
         log.info(f"sprite shape: {self.sprites.shape}")
         log.info(f"labels shape: {self.slabels.shape}")
-        self.transform = transform
+
+        self.transform = T.Compose([
+            T.RandomHorizontalFlip() if augment_horizontal_flip else nn.Identity(),
+            T.ToTensor(),                # from [0,255] to range [0.0,1.0]
+            T.Normalize((0.5,), (0.5,))  # range [-1,1]
+
+        ])
+
         self.null_context = null_context
         self.sprites_shape = self.sprites.shape
         self.slabel_shape = self.slabels.shape
@@ -34,8 +42,3 @@ class CustomDataset(Dataset):
         # return shapes of data and labels
         return self.sprites_shape, self.slabel_shape
 
-transform = transforms.Compose([
-    transforms.ToTensor(),                # from [0,255] to range [0.0,1.0]
-    transforms.Normalize((0.5,), (0.5,))  # range [-1,1]
-
-])
