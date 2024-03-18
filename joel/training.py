@@ -2,40 +2,10 @@ import torch
 import logging as log
 import numpy as np
 import torch.nn.functional as F
-from torchvision import transforms
 from torch.utils.data import Dataset, DataLoader
 from gpuperf import *
+from dataset import *
 from tqdm import tqdm
-
-class CustomDataset(Dataset):
-    def __init__(self, sfilename, lfilename, transform, null_context=False):
-        self.sprites = np.load(sfilename)
-        self.slabels = np.load(lfilename)
-        print(f"sprite shape: {self.sprites.shape}")
-        print(f"labels shape: {self.slabels.shape}")
-        self.transform = transform
-        self.null_context = null_context
-        self.sprites_shape = self.sprites.shape
-        self.slabel_shape = self.slabels.shape
-                
-    # Return the number of images in the dataset
-    def __len__(self):
-        return len(self.sprites)
-    
-    # Get the image and label at a given index
-    def __getitem__(self, idx):
-        # Return the image and label as a tuple
-        if self.transform:
-            image = self.transform(self.sprites[idx])
-            if self.null_context:
-                label = torch.tensor(0).to(torch.int64)
-            else:
-                label = torch.tensor(self.slabels[idx]).to(torch.int64)
-        return (image, label)
-
-    def getshapes(self):
-        # return shapes of data and labels
-        return self.sprites_shape, self.slabel_shape
     
 class Training():
     def __init__(self, noise_sampler, nn_model, lr, batch_size, device, gpu_perf):
@@ -44,16 +14,14 @@ class Training():
         self.lr = lr
         self.device = device
         self.gpu_perf = gpu_perf
-        
-        transform = transforms.Compose([
-            transforms.ToTensor(),                # from [0,255] to range [0.0,1.0]
-            transforms.Normalize((0.5,), (0.5,))  # range [-1,1]
-
-        ])
 
         # load dataset and construct optimizer
-        dataset = CustomDataset("./sprites_1788_16x16.npy", "./sprite_labels_nc_1788_16x16.npy", transform, null_context=False)
+        dataset = CustomDataset("./sprites_1788_16x16.npy", "./sprite_labels_nc_1788_16x16.npy", null_context=False)
         self.dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=1)
+        # https://arxiv.org/pdf/1412.6980.pdf
+        # The paper "Adam: A Method for Stochastic Optimization" recommend using a learning rate of 0.001,
+        # Extension gradient descent that automatically adapts a learning rate for each input variable
+        # https://machinelearningmastery.com/adam-optimization-from-scratch/
         self.optim = torch.optim.Adam(nn_model.parameters(), lr=lr)
 
     def train(self, timesteps, n_epoch, filename, use_context=False):
