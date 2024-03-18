@@ -75,8 +75,13 @@ class UnetUp(nn.Module):
         
         # Create a list of layers for the upsampling block
         # The block consists of a ConvTranspose2d layer for upsampling, followed by two ResidualConvBlock layers
+
+        # In transposed convolutions, the strides parameter indicates how fast the kernel moves on
+        # the output layer. The kernel always move only one number at a time on the input layer. 
+        # Thus, the larger the strides, the larger the output matrix (if no padding).
+
         layers = [
-            nn.ConvTranspose2d(in_channels, out_channels, 2, 2),
+            nn.ConvTranspose2d(in_channels, out_channels, 2, 2), # kernel_size=2, stride=2
             ResidualConvBlock(out_channels, out_channels),
             ResidualConvBlock(out_channels, out_channels),
         ]

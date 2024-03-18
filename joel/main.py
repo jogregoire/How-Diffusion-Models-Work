@@ -50,7 +50,7 @@ def main():
 
     gpu_perf.snapshot('before')
 
-    args.train = True
+    #args.train = True
     if args.train: # training ---------------------------
         # training hyperparameters
         batch_size = 100
