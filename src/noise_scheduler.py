@@ -1,10 +1,10 @@
 import torch
 
 class NoiseScheduler():
-    LINEAR = 0
-    QUADRATIC = 1
-    SIGMOID = 2
-    COSINE = 3
+    LINEAR = "LINEAR"
+    QUADRATIC = "QUADRATIC"
+    SIGMOID = "SIGMOID"
+    COSINE = "COSINE"
 
     def __init__(self, timesteps, device, shape = LINEAR, beta1 = 1e-4, beta2 = 0.02):
         if shape == self.LINEAR:
