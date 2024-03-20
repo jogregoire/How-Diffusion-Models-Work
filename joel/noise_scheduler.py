@@ -29,6 +29,8 @@ class NoiseScheduler():
         self.__define_alphas()
 
     def sigmoid_schedule(self, timesteps, device, beta1 = 1e-4, beta2 = 0.02):
+        # proposed in https://arxiv.org/abs/2212.11972 - Figure 8
+        # better for images > 64x64, when used during training
         betas = torch.linspace(-6, 6, timesteps, device=device)
         self.b_t = torch.sigmoid(betas) * (beta2 - beta1) + beta1
         self.__define_alphas()
