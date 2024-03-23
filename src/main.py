@@ -36,7 +36,7 @@ def main():
         train(device, gpu_perf, timesteps, noise_type, batch_size, n_epoch, use_context)
     else:
         # sampling hyperparameters
-        n_sample = 4
+        n_sample = 9
         sample(device, gpu_perf, timesteps, noise_type, n_sample)
 
 def initialize(logLevel = None):
@@ -62,6 +62,8 @@ def train(device, gpu_perf, timesteps, noise_type, batch_size, n_epoch, use_cont
         in_channels=3 # rgb
 
         lrate=1e-3
+
+        log.info(f"training:: timesteps:{timesteps}, noise:{noise_type}, batch size:{batch_size}, epoch: {n_epoch}")
 
         # load model
         model_filename = f"./weights/model_trained_{timesteps}_{noise_type}_{batch_size}_{n_epoch}_context.pth"
@@ -89,6 +91,8 @@ def sample(device, gpu_perf, timesteps, noise_type, n_sample, sampler_type = 'DD
         n_cfeat = 5 # context vector is of size 5
         height = 16 # 16x16 image
         in_channels=3 # rgb
+
+        log.info(f"sampling:: timesteps: {timesteps}, noise: {noise_type}, n_sample: {n_sample}, sampler: {sampler_type}")
 
         # load model
         if model_filename == None:

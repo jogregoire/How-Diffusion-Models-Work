@@ -16,7 +16,7 @@ class Training():
         self.gpu_perf = gpu_perf
 
         # load dataset and construct optimizer
-        dataset = CustomDataset("./sprites_1788_16x16.npy", "./sprite_labels_nc_1788_16x16.npy", null_context=False)
+        dataset = CustomDataset("./dataset/sprites_1788_16x16.npy", "./dataset/sprite_labels_nc_1788_16x16.npy", null_context=False)
         self.dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=1)
         # https://arxiv.org/pdf/1412.6980.pdf
         # The paper "Adam: A Method for Stochastic Optimization" recommend using a learning rate of 0.001,

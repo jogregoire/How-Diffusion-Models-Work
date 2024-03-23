@@ -13,7 +13,7 @@ class CustomDataset(Dataset):
         log.info(f"labels shape: {self.slabels.shape}")
 
         self.transform = T.Compose([
-            T.RandomHorizontalFlip() if augment_horizontal_flip else nn.Identity(),
+            #T.RandomHorizontalFlip() if augment_horizontal_flip else nn.Identity(),
             T.ToTensor(),                # from [0,255] to range [0.0,1.0]
             T.Normalize((0.5,), (0.5,))  # range [-1,1]
 
