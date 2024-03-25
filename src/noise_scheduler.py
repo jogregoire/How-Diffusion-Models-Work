@@ -1,4 +1,5 @@
 import torch
+import logging as log
 
 class NoiseScheduler():
     LINEAR = "LINEAR"
@@ -7,6 +8,7 @@ class NoiseScheduler():
     COSINE = "COSINE"
 
     def __init__(self, timesteps, device, shape = LINEAR, beta1 = 1e-4, beta2 = 0.02):
+        log.info(f'NoiseScheduler: timesteps: {timesteps}, shape: {shape}, beta1: {beta1}, beta2: {beta2}')
         if shape == self.LINEAR:
             self.linear_schedule(timesteps, device, beta1, beta2)
         elif shape == self.QUADRATIC:
@@ -20,26 +22,26 @@ class NoiseScheduler():
 
     def linear_schedule(self, timesteps, device, beta1 = 1e-4, beta2 = 0.02):
         # construct linear noise schedule
-        self.b_t = torch.linspace(beta1, beta2, timesteps, device=device)
+        self.b_t = torch.linspace(beta1, beta2, timesteps + 1, device=device)
         self.__define_alphas()
 
     def quadratic_schedule(self, timesteps, device, beta1 = 1e-4, beta2 = 0.02):
         # construct quadratic noise schedule
-        self.b_t = torch.linspace(beta1**0.5, beta2**0.5, timesteps, device=device) ** 2
+        self.b_t = torch.linspace(beta1**0.5, beta2**0.5, timesteps + 1, device=device) ** 2
         self.__define_alphas()
 
     def sigmoid_schedule(self, timesteps, device, beta1 = 1e-4, beta2 = 0.02):
         # proposed in https://arxiv.org/abs/2212.11972 - Figure 8
         # better for images > 64x64, when used during training
-        betas = torch.linspace(-6, 6, timesteps, device=device)
+        betas = torch.linspace(-6, 6, timesteps + 1, device=device)
         self.b_t = torch.sigmoid(betas) * (beta2 - beta1) + beta1
         self.__define_alphas()
 
     def cosine_schedule(self, timesteps, device, beta1 = 1e-4, beta2 = 0.02):
         # cosine schedule as proposed in https://arxiv.org/abs/2102.09672
         s=0.008
-        steps = timesteps + 1
-        x = torch.linspace(0, timesteps, steps, device=device)
+        steps = timesteps + 2
+        x = torch.linspace(0, timesteps + 1, steps, device=device)
         self.ab_t = torch.cos(((x / timesteps) + s) / (1 + s) * torch.pi * 0.5) ** 2
         self.ab_t = self.ab_t / self.ab_t[0]
         betas = 1 - (self.ab_t[1:] / self.ab_t[:-1])

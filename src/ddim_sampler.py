@@ -26,7 +26,7 @@ class DDIMSampler(Sampler):
         step_size = timesteps // n
 
         # array to keep track of generated steps for plotting
-        for i in range(timesteps-1, 0, -step_size):
+        for i in range(timesteps, 0, -step_size):
             print(f'sampling timestep {i:3d}\r', end='\r') # not a log
 
             # reshape time tensor

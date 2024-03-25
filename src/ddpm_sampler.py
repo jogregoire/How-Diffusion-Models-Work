@@ -21,7 +21,7 @@ class DDPMSampler(Sampler):
         samples = torch.randn(n_sample, 3, height, height).to(device)  
 
         # array to keep track of generated steps for plotting
-        for i in range(timesteps-1, 0, -1):
+        for i in range(timesteps, 0, -1):
             print(f'sampling timestep {i:3d}\r', end='\r') # not a log
 
             # reshape time tensor
