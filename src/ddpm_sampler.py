@@ -16,12 +16,17 @@ class DDPMSampler(Sampler):
         return mean + noise
 
     @torch.no_grad()
-    def sample(self, n_sample, height, timesteps, nn_model, device, gpu_perf, context=None):
+    def sample(self, n_sample, height, timesteps, nn_model, device, gpu_perf, context=None, stop_after_timesteps=None):
         # x_T ~ N(0, 1), sample initial noise
-        samples = torch.randn(n_sample, 3, height, height).to(device)  
+        samples = torch.randn(n_sample, 3, height, height).to(device) 
+
+        end = 0
+        if stop_after_timesteps is not None:
+            end = timesteps - stop_after_timesteps
+            log.info(f"end: {end}")
 
         # array to keep track of generated steps for plotting
-        for i in range(timesteps, 0, -1):
+        for i in range(timesteps, end, -1):
             print(f'sampling timestep {i:3d}\r', end='\r') # not a log
 
             # reshape time tensor

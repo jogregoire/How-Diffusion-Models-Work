@@ -16,8 +16,13 @@ class DDIMSampler(Sampler):
         return x0_pred + dir_xt
     
     @torch.no_grad()
-    def sample(self, n_sample, height, timesteps, nn_model, device, gpu_perf, context=None):
+    def sample(self, n_sample, height, timesteps, nn_model, device, gpu_perf, context=None, stop_after_timesteps=None):
         
+        end = 0
+        if stop_after_timesteps is not None:
+            end = timesteps - stop_after_timesteps
+            log.info(f"end: {end}")
+
         n=20
 
         # x_T ~ N(0, 1), sample initial noise
@@ -26,7 +31,7 @@ class DDIMSampler(Sampler):
         step_size = timesteps // n
 
         # array to keep track of generated steps for plotting
-        for i in range(timesteps, 0, -step_size):
+        for i in range(timesteps, end, -step_size):
             print(f'sampling timestep {i:3d}\r', end='\r') # not a log
 
             # reshape time tensor
