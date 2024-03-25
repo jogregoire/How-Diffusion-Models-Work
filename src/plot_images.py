@@ -2,6 +2,7 @@ import torch
 import numpy as np
 import logging as log
 from torchvision.utils import save_image, make_grid
+import torchvision.transforms.functional as F
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
 from PIL import Image
@@ -48,7 +49,11 @@ def plot_grid(x,path):
     # x:(n_sample, 3, h, w)
     ncols = n_sample//n_rows
     grid = make_grid(norm_torch(x), nrow=ncols)  # curiously, nrow is number of columns.. or number of items in the row.
-    save_image(grid, path)
+
+    # resize the image tensor
+    scaled_image_tensor = F.resize(grid, size=(512, 512), interpolation=F.InterpolationMode.NEAREST)
+
+    save_image(scaled_image_tensor, path)
     log.info(f'saved image at {path}')
     return grid
 
