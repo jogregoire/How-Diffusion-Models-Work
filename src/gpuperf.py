@@ -3,6 +3,7 @@ import pynvml
 import datetime
 import pandas as pd
 import logging as log
+import matplotlib.pyplot as plt
 
 class GPUPerf:
     def __init__(self, gpu_enabled, device):
@@ -24,7 +25,8 @@ class GPUPerf:
             self.handle = pynvml.nvmlDeviceGetHandleByIndex(0)
             max_power = pynvml.nvmlDeviceGetPowerManagementLimit(self.handle)
 
-            log.info(f"Device: {device_name}, Count: {device_count}, Memory: {self.__bytefmt(self.mem_total)} GB, Driver: {pynvml.nvmlSystemGetDriverVersion()}, Max Power: {max_power / 1000.0} W")
+            self.info = f"Device: {device_name}, Device Count: {device_count}, Memory: {self.__bytefmt(self.mem_total)} GB, Driver: {pynvml.nvmlSystemGetDriverVersion()}, Max Power: {max_power / 1000.0} W"
+            log.info(self.info)
 
             self.df = pd.DataFrame(columns=['Time', 'Event', 'AllocatedMem', 'FreedMem', 'CurrentMem', 'PeakMem', 'Usage', 'Temperature', 'Power'])
 
@@ -63,6 +65,41 @@ class GPUPerf:
     def save_snapshots(self, filename):
         if self.gpu_enabled:
             self.df.to_csv(filename)
+
+    def save_plot(self, filename):
+        if self.gpu_enabled:
+            # find the max of the all memory-related columns
+            mem_columns = ['CurrentMem', 'PeakMem']
+
+            # Find the maximum of the memory-related columns
+            max_values = self.df[mem_columns].max()
+            max_mem = max_values.max()
+            i=0
+            while max_mem > 1024:
+                max_mem = max_mem / 1024
+                i += 1
+
+            #divide all memory-related columns by 1024^i
+            suffixes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
+
+            # Create a figure and an array of axes
+            fig, axs = plt.subplots(2, 2, figsize=(10, 10))
+
+            axs[0,0].plot(self.df['CurrentMem'] / 1024**i, label=f'Current ({suffixes[i]})')
+            axs[0,0].plot(self.df['PeakMem'] / 1024**i, label=f'Peak ({suffixes[i]})')
+            axs[0,0].legend()
+            axs[0,0].set_title("VRAM usage")
+
+            axs[0,1].plot(self.df['Usage'], label='Usage')
+            axs[0,1].set_title("CUDA utilization (%)")
+
+            axs[1,0].plot(self.df['Temperature'], label='Temperature')
+            axs[1,0].set_title("GPU temperature")
+
+            axs[1,1].plot(self.df['Power'], label='power (W)')
+            axs[1,1].set_title("GPU power (W)")
+
+            plt.savefig(filename, dpi=300, bbox_inches='tight')
 
     def record_memory_history(self):
         # record memory usage: https://pytorch.org/docs/stable/torch_cuda_memory.html
