@@ -1,22 +1,17 @@
-# TODO
+# Diffusion Models 101
 
-- optimize training speed depending on the GPU speed/VRAM
-    - get GPU usage
+This repository has educational purpose only. It is based on the work done by Ryota Kawamura [Github repo](https://github.com/Ryota-Kawamura/How-Diffusion-Models-Work). I experimented experiment with the code and labs presented in Deeplearning AI's [How Diffusion Models Work](https://www.deeplearning.ai/short-courses/how-diffusion-models-work/).Sharon Zhou
 
-- gradio website
+https://kyrise.itch.io/kyrises-free-16x16-rpg-icon-pack
 
-- save model architecture + weights&biases
+In How Diffusion Models Work, you will gain a deep familiarity with the diffusion process and the models which carry it out. More than simply pulling in a pre-built model or using an API, this course will teach you to build a diffusion model from scratch.
 
-- store model in databrick
+- tried different noise scheduler
 
-- save model to ONNX
+
+- get GPU performance from Pytorch and Pynvml (from Nvidia's driver)
+
 
 - noise scheduler: cosine (https://betterprogramming.pub/diffusion-models-ddpms-ddims-and-classifier-free-guidance-e07b297b2869#0caf)
 
-- DDIM
-
-- get the same sprite facing front and side!
-
-- in/out-painting
-
-- LoRA: https://kyrise.itch.io/kyrises-free-16x16-rpg-icon-pack
+- assets: https://kyrise.itch.io/kyrises-free-16x16-rpg-icon-pack
